@@ -19,6 +19,9 @@
 |  target | 类型id  |
 
 
+
+
+
 > step2
 ## 为模板添加规则
 #### 接口 ScheduleRulesService/ruleAddEdit
@@ -26,22 +29,21 @@
 | ------------ | ------------ |
 |  id | 模板id  |
 |  timePeriod | 时间限制的日期 2019/01/18 - 2019/01/18 |
-|  loop_type | 时间的类型  month 每个月 week每周 daily每天  |
 |  month_day | 每个月的多少号  （当类型为每个月的多少号的时候 只传month_day字段 week_day字段为空） |
 |  week_day | 星期几 （当类型为每个周的周几的时候 只传该字段 month_day为空 ）  |
+|  sort | 权重，当有两个规则相同去权重大的 越大越先校驗  |
 
-#### 注释：
-##### 1.当 month_day 字段和 week_day 字段都为空的时候 为每天的类型 **
-##### 2.当 month_day 为数组的时候会生成多条数据 如： **
-#####$month_day = [
+#### 注释： 
+####  1.当 month_day 字段和 week_day 字段都为空的时候 为每天的类型 
+####  2.当 month_day 为数组的时候会生成多条数据 如： 
+        $month_day = [
             '0' => '2',
             '1' => '5',
             '2' => '6'
         ];
-        生成每月 2号 5号 6号的三条预约,week_day 字段同理
-        具体可看demo
-#####
-##### 3.当 month_day 和 week_day 同时存在 的时候 既生成星期的 也 生成每月的  
+		生成每月 2号 5号 6号的三条预约,week_day 字段同理
+		具体可看demo
+####  3.当 month_day 和 week_day 同时存在 的时候 既生成星期的 也 生成每月的  **
 
 
 > step3
@@ -95,28 +97,29 @@
 
 ```json
 {
-    "status":true,
-    "code":200,
-    "msg":"预约存在; schedule_id为：9,schedule_rule_id为：19",//返回信息
-    "data":{
-        "schedule_id":9,
-        "schedule_rule_id":19
-    }
+	"status":true,
+	"code":200,
+	"msg":"预约存在; schedule_id为：9,schedule_rule_id为：19",//返回信息
+	"data":{
+	    "schedule_id":'9',
+	    "schedule_rule_id":'19',
+		"data":'2019/01/11'
+	}
 }
 ```
 ##### step7失败返回
 ```
 {
-    "status":false,
-    "code":400,
-    "msg":"预约不存在",
-    "data":false
+	"status":false,
+	"code":400,
+	"msg":"预约不存在",
+	"data":false
 }
 ```
 
  > step8
  ## 校验时间是否存在预约
- #### 接口 ScheduleRulesService/checkTime 
+ #### 接口 ScheduleRulesService/queryRule 
 
  | 参数  |  注释 |
  | ------------ | ------------ |
@@ -126,31 +129,27 @@
  ##### step8成功返回
  ```
  {
-    "status":true,
-    "code":200,
-    "data":[{
-        "id":"33",
-        "schedule_id":"9",
-        "start_time":"1548432000",
-        \"end_time":"1548432000",
-        "year":"0",
-        "month":"0",
-        "day":"0",
-        "week":"0",
-        "loop_type":"daily",
-        "add_time":"1546510515"
-        }],
-        "msg":"存在预约",
-        "url":"",
-        "state":"success"
+   "status":true,
+   "code":200,
+   "data":[
+        {
+            "schedule_id":"9",
+            "schedule_rule_id":"33",
+            "date":"2019/01/25"，
+            "loop_type":"week"
+	    }
+	   ],
+       "msg":"存在预约",
+       "url":"",
+       "state":"success"
 }
  ```
 ##### step8失败返回
 ```
 {
-    "status":false,
-    "code":400,
-    "msg":"预约不存在",
-    "data":[]
+	"status":false,
+	"code":400,
+	"msg":"预约不存在",
+	"data":[]
 }
 ```

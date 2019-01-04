@@ -68,6 +68,7 @@ class ScheduleRulesController extends AdminBase {
         $loop_type = $post['loop_type'];
         $month_day = $post['month_day'];
         $week_day = $post['week_day'];
+        $sort = $post['sort'] ? $post['sort'] : 0;
         if($loop_type == 'month'){
             $week_day = '0';
         }
@@ -90,7 +91,7 @@ class ScheduleRulesController extends AdminBase {
 //            '2' => '9'
 //        ];
         //添加规则
-        $res = ScheduleRulesService::ruleAddEdit($id,$timePeriod,$month_day,$week_day);
+        $res = ScheduleRulesService::ruleAddEdit($id,$timePeriod,$month_day,$week_day,$sort);
         $this->ajaxReturn($res);
     }
 

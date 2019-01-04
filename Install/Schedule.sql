@@ -20,6 +20,7 @@ CREATE TABLE `cms_schedule_rule`  (
   `week` tinyint(1) NOT NULL DEFAULT 0 COMMENT '星期',
   `loop_type` varchar(30) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '類型',
   `add_time` int(11) NOT NULL COMMENT '添加時間',
+  `sort` int(10) NULL DEFAULT NULL COMMENT '排序 数值越大越先校验',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = MyISAM AUTO_INCREMENT = 34 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 

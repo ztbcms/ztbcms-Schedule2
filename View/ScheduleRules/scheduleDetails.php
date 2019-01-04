@@ -90,6 +90,16 @@
                                     </tr>
 
                                     <tr v-if="id > 0">
+                                        <td>排序:</td>
+                                        <td>
+                                            <input type="number" name="timegap" value="" placeholder="排序"
+                                                    class="form-control sort"
+                                                   style="width: 200px;">
+                                            <span class="annotation"> 排序越大越先檢驗 </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr v-if="id > 0">
                                         <td>选择具体的时间:</td>
                                         <td>
                                             <select id="J_time_select" name="loop_type" class="form-control loop_type">
@@ -190,11 +200,13 @@
                                     <tr>
                                         <td><b>开始时间 - 结束时间</b></td>
                                         <td><b>预约类型</b></td>
+                                        <td><b>排序</b></td>
                                         <td><b>操作</b></td>
                                     </tr>
                                     <tr v-for="(items,k) in rule_list">
                                         <td>{{ items.time_name }}</td>
                                         <td>{{ items.loop_type_name }}</td>
+                                        <td>{{ items.sort }}</td>
                                         <td>
                                             <a style="margin-bottom: 5px;" class="btn btn-danger"
                                                @click="delRule(items.id)">
@@ -265,7 +277,8 @@
                         loop_type:$(".loop_type").val(),
                         month_day:$(".month_day").val(),
                         week_day:$(".week_day").val(),
-                        now_time:$(".now_time").val()
+                        now_time:$(".now_time").val(),
+                        sort:$('.sort').val()
                     };
                     $.ajax({
                         url: window.config.url.rulesAddEdit,

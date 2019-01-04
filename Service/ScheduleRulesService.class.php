@@ -37,7 +37,7 @@ class ScheduleRulesService extends BaseService
     {
         $where['id'] = $id;
         $res_find = self::find(self::SCHEDULE, $where);
-        $res_find['data']['rule'] = D(self::SCHEDULE_RULE)->where(['schedule_id' => $where['id']])->select();
+        $res_find['data']['rule'] = D(self::SCHEDULE_RULE)->where(['schedule_id' => $where['id']])->order('sort desc')->select();
         foreach ($res_find['data']['rule'] as &$v){
             $ScheduleRuleModel = new ScheduleRuleModel();
             $rule_data = $ScheduleRuleModel->translateView($v);
@@ -74,7 +74,7 @@ class ScheduleRulesService extends BaseService
     }
 
     //为模板添加规则
-    static function ruleAddEdit($id,$timePeriod,$month_day,$week_day){
+    static function ruleAddEdit($id,$timePeriod,$month_day,$week_day,$sort){
         $RuleModel = new ScheduleRuleModel;
         //校验并对数据进行处理
         $check_res = $RuleModel->checkRule($id,$timePeriod,$month_day,$week_day);
@@ -96,6 +96,7 @@ class ScheduleRulesService extends BaseService
             $schedule_rule_add['week'] = $v['week'];
             $schedule_rule_add['loop_type'] = $v['loop_type'];
             $schedule_rule_add['add_time'] = time();
+            $schedule_rule_add['sort'] = $sort;
             $rule_res = $schedule_rule_table->add($schedule_rule_add);
             if(!$rule_res) $Rollback = false;  else $rule_id[] = $rule_res;
         }
@@ -166,9 +167,8 @@ class ScheduleRulesService extends BaseService
         $start_time = strtotime($time[0]);
         $end_time = strtotime($time[1]);
         if(!$id) return self::createReturn(false, '', 'id不能为空');
-        $rule_where['start_time|end_time'] = ['BETWEEN', [$start_time, $end_time]];;
-        $rule_where['schedule_id'] = $id;
-        $res = D(self::SCHEDULE_RULE)->where($rule_where)->select();
+        $ScheduleRuleModel = new ScheduleRuleModel();
+        $res = $ScheduleRuleModel->queryRule($start_time,$end_time,$id);
         if($res){
             return self::createReturn(true, $res, '存在预约');
         } else {
