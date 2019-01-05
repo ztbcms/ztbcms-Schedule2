@@ -15,10 +15,8 @@ use Schedule\Model\ScheduleRuleModel;
 
 class ScheduleRulesService extends BaseService
 {
-
     const SCHEDULE = ScheduleModel::TABLE;            //默认兼职介绍
     const SCHEDULE_RULE = ScheduleRuleModel::TABLE;  //默认兼职具体规则
-
 
     //规则列表
     static function scheduleList($name = null, $order = 'id desc', $page = 1, $limit = 20)
@@ -33,9 +31,9 @@ class ScheduleRulesService extends BaseService
     }
 
     //规则详情
-    static function scheduleDetails($id)
+    static function scheduleDetails($scheduleId)
     {
-        $where['id'] = $id;
+        $where['id'] = $scheduleId;
         $res_find = self::find(self::SCHEDULE, $where);
         $res_find['data']['rule'] = D(self::SCHEDULE_RULE)->where(['schedule_id' => $where['id']])->order('sort desc')->select();
         foreach ($res_find['data']['rule'] as &$v){
@@ -47,20 +45,55 @@ class ScheduleRulesService extends BaseService
         return $res_find;
     }
 
-    //添加或者编辑模板和规则
-    static function scheduleAddEdit($id,$name,$target_type,$target){
+    //添加或者編輯模板和規則
+    static function scheduleRuleAddEdit($data,$scheduleId = null,$name = null,$targetType = null,$target= null){
+        if(!$scheduleId) {
+            if(!$name) return self::createReturn(false, '', '我們不建議模板名稱為空');
+            if(!$targetType) return self::createReturn(false, '', 'targetType为空');
+            if(!$target) return self::createReturn(false, '', 'target为空');
+            $scheduleId = self::scheduleAddEdit('',$name,$targetType,$target)['data']['schedule_id'];
+            $new = [];
+            foreach ($data as $k => $v){
+                $timePeriod = $v['timePeriod'];
+                $monthDay = $v['monthDay'];
+                $weekDay = $v['weekDay'];
+                $sort = $v['sort'] ? $v['sort'] : 0;
+                $id = $scheduleId;
+                $rule_id = self::ruleAddEdit($id,$timePeriod,$monthDay,$weekDay,$sort)['data'];
+                $new[$k]['rule_info'] = $rule_id;
+            }
+        } else {
+            $saveSchedule = self::scheduleAddEdit($scheduleId,$name,$targetType,$target)['data']['schedule_id'];
+            $delRes = D(self::SCHEDULE_RULE)->where(['schedule_id'=>$scheduleId])->delete();
+            foreach ($data as $k => $v){
+                $timePeriod = $v['timePeriod'];
+                $monthDay = $v['monthDay'];
+                $weekDay = $v['weekDay'];
+                $sort = $v['sort'] ? $v['sort'] : 0;
+                $id = $scheduleId;
+                $rule_id = self::ruleAddEdit($id,$timePeriod,$monthDay,$weekDay,$sort)['data'];
+                $new[$k]['rule_info'] = $rule_id;
+            }
+        }
+        $res_data['schedule_id'] = $scheduleId;
+        $res_data['data'] = $new;
+        return self::createReturn(true, $res_data, '请求成功');
+    }
+
+    //添加或者编辑模板
+    static function scheduleAddEdit($scheduleId = null,$name,$targetType,$target){
         $table = D(self::SCHEDULE);
-        if(!$target_type) return self::createReturn(false, '', '此处不太建议target_type为空');
+        if(!$targetType) return self::createReturn(false, '', '此处不太建议target_type为空');
         if(!$target) return self::createReturn(false, '', '此处不太建议target为空');
-        if($id){
+        if($scheduleId){
             $save['name'] = $name;
-            $save['target_type'] = $target_type;
+            $save['target_type'] = $targetType;
             $save['target'] = $target;
-            $res = $table->where(['id'=>$id])->save($save);
-            $res_data['schedule_id'] = $id;
+            $res = $table->where(['id'=>$scheduleId])->save($save);
+            $res_data['schedule_id'] = $scheduleId;
         } else {
             $data['name'] = $name;
-            $data['target_type'] = $target_type;
+            $data['target_type'] = $targetType;
             $data['target'] = $target;
             $data['add_time'] = time();
             $res = $table->add($data);
@@ -74,10 +107,10 @@ class ScheduleRulesService extends BaseService
     }
 
     //为模板添加规则
-    static function ruleAddEdit($id,$timePeriod,$month_day,$week_day,$sort){
+    static function ruleAddEdit($scheduleId,$timePeriod,$monthDay,$weekDay,$sort){
         $RuleModel = new ScheduleRuleModel;
         //校验并对数据进行处理
-        $check_res = $RuleModel->checkRule($id,$timePeriod,$month_day,$week_day);
+        $check_res = $RuleModel->checkRule($scheduleId,$timePeriod,$monthDay,$weekDay);
         if($check_res['status'] == false) return self::createReturn(false, '', $check_res['msg']);
 
         $data = $check_res['data']['items'];
@@ -105,15 +138,16 @@ class ScheduleRulesService extends BaseService
             return BaseService::createReturn(false, '', '添加失败');
         } else {
             M()->commit();
-            $data['rule_id'] = $rule_id;
-            return self::createReturn(true, $data, '添加规则成功');
+            $res_data['list'] = $data;
+            $res_data['rule_id'] = $rule_id;
+            return self::createReturn(true, $res_data, '添加规则成功');
         }
     }
 
     //删除规则
-    static function rulesDel($rule_id){
-        if(!$rule_id) return self::createReturn(false, '', 'id不能为空');
-        $res = D(self::SCHEDULE_RULE)->where(['id'=>$rule_id])->delete();
+    static function rulesDel($ruleId){
+        if(!$ruleId) return self::createReturn(false, '', 'id不能为空');
+        $res = D(self::SCHEDULE_RULE)->where(['id'=>$ruleId])->delete();
         if($res){
             return self::createReturn(true, $res, '删除成功');
         } else {
@@ -122,12 +156,12 @@ class ScheduleRulesService extends BaseService
     }
 
     //校验时间是否被预约
-    static function checkTime($checkTime,$id){
+    static function checkTime($checkTime,$scheduleId){
         $time = strtotime($checkTime);
         if(!$time) return self::createReturn(false, '', '时间不能为空');
-        if(!$id) return self::createReturn(false, '', 'id不能为空');
+        if(!$scheduleId) return self::createReturn(false, '', 'id不能为空');
         $ScheduleRuleModel = new ScheduleRuleModel();
-        $res = $ScheduleRuleModel->checkTime($time,$id);
+        $res = $ScheduleRuleModel->checkTime($time,$scheduleId);
         if($res['code'] != '200'){
             return self::createReturn(false, '', $res['msg']);
         } else {
@@ -150,10 +184,10 @@ class ScheduleRulesService extends BaseService
     }
 
     //刪除模板
-    static function delSchedule($id){
-        if(!$id) return self::createReturn(false, '', '模板id不能为空');
-        $res = D(self::SCHEDULE)->where(['id'=>$id])->delete();
-        D(self::SCHEDULE_RULE)->where(['schedule_id'=>$id])->delete();
+    static function delSchedule($scheduleId){
+        if(!$scheduleId) return self::createReturn(false, '', '模板id不能为空');
+        $res = D(self::SCHEDULE)->where(['id'=>$scheduleId])->delete();
+        D(self::SCHEDULE_RULE)->where(['schedule_id'=>$scheduleId])->delete();
         if($res){
             return self::createReturn(true, '', '删除成功');
         } else {
@@ -162,13 +196,13 @@ class ScheduleRulesService extends BaseService
     }
 
     //查询某时间段内的所有预约规则
-    static function queryRule($checkTime,$id){
+    static function queryRule($checkTime,$scheduleId){
         $time = explode('-',$checkTime);
         $start_time = strtotime($time[0]);
         $end_time = strtotime($time[1]);
-        if(!$id) return self::createReturn(false, '', 'id不能为空');
+        if(!$scheduleId) return self::createReturn(false, '', 'id不能为空');
         $ScheduleRuleModel = new ScheduleRuleModel();
-        $res = $ScheduleRuleModel->queryRule($start_time,$end_time,$id);
+        $res = $ScheduleRuleModel->queryRule($start_time,$end_time,$scheduleId);
         if($res){
             return self::createReturn(true, $res, '存在预约');
         } else {

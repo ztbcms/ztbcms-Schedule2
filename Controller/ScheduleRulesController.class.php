@@ -50,13 +50,11 @@ class ScheduleRulesController extends AdminBase {
        $post = I('post.');
        $id = $post['id'];
        $name = $post['detail']['name'];
-       $target_type = $post['detail']['target_type'];
+       $targetType = $post['detail']['target_type'];
        $target = $post['detail']['target'];
-       $res = ScheduleRulesService::scheduleAddEdit($id,$name,$target_type,$target);
+       $res = ScheduleRulesService::scheduleAddEdit($id,$name,$targetType,$target);
        $this->ajaxReturn($res);
     }
-
-
 
     /*
      * 添加新的规则
@@ -66,32 +64,32 @@ class ScheduleRulesController extends AdminBase {
         $id = $post['id'];
         $timePeriod = $post['timePeriod'];
         $loop_type = $post['loop_type'];
-        $month_day = $post['month_day'];
-        $week_day = $post['week_day'];
+        $monthDay = $post['month_day'];
+        $weekDay = $post['week_day'];
         $sort = $post['sort'] ? $post['sort'] : 0;
         if($loop_type == 'month'){
-            $week_day = '0';
+            $weekDay = '0';
         }
         if($loop_type == 'week'){
-            $month_day = '0';
+            $monthDay = '0';
         }
         if($loop_type == 'daily'){
-            $month_day = '0';
-            $week_day = '0';
+            $monthDay = '0';
+            $weekDay = '0';
         }
 //  模拟数据demo
-//        $week_day = [
+//        $weekDay = [
 //            '0' => '2',
 //            '1' => '5',
 //            '2' => '6'
 //        ];
-//        $month_day = [
+//        $monthDay = [
 //            '0' => '5',
 //            '1' => '8',
 //            '2' => '9'
 //        ];
         //添加规则
-        $res = ScheduleRulesService::ruleAddEdit($id,$timePeriod,$month_day,$week_day,$sort);
+        $res = ScheduleRulesService::ruleAddEdit($id,$timePeriod,$monthDay,$weekDay,$sort);
         $this->ajaxReturn($res);
     }
 
@@ -99,8 +97,8 @@ class ScheduleRulesController extends AdminBase {
      * 删除模板规则
      */
     public function rulesDel(){
-       $id = I('id','','trim');
-       $res = ScheduleRulesService::rulesDel($id);
+       $ruleId = I('id','','trim');
+       $res = ScheduleRulesService::rulesDel($ruleId);
        $this->ajaxReturn($res);
     }
 
@@ -142,6 +140,28 @@ class ScheduleRulesController extends AdminBase {
         $checkTime = I('checkTime','','trim');
         $id = I('id','','trim');
         $res = ScheduleRulesService::queryRule($checkTime,$id);
+        $this->ajaxReturn($res);
+    }
+
+    /*
+     * 直接添加模板和規則
+     */
+    public function scheduleRuleAddEdit(){
+        $data = [];
+
+//        $data = [
+//            '0' => [
+//                'timePeriod' => '2019/01/12 - 2019/01/25',
+//                'monthDay' => '14',
+//                'sort' => '2',
+//            ],
+//            '1' => [
+//                'timePeriod' => '2019/01/17 - 2019/01/25',
+//                'weekDay' => '3',
+//                'sort' => ''
+//            ]
+//        ];
+        $res = ScheduleRulesService::scheduleRuleAddEdit($data,'20','模板三','goods_id','489');
         $this->ajaxReturn($res);
     }
 
